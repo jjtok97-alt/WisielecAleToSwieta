@@ -68,7 +68,6 @@ h1{
   height:auto;
   border-radius:8px;
   background: transparent;
-  filter: drop-shadow(0 0 12px rgba(0,0,0,0.4));
 }
 
 /* ornaments */
@@ -101,18 +100,18 @@ h1{
   align-items:center;
 }
 
-/* słowo */
+/* word display */
 .word {
   display:flex;
-  gap:5px;
-  flex-wrap:wrap;
+  flex-direction:column;
+  align-items:center;
   justify-content:center;
-  min-height:60px;
-  max-width: 340px;
+  gap:6px;
+  min-height:100px;
 }
 .letter {
-  width:30px;
-  height:40px;
+  width:28px;
+  height:38px;
   border-radius:6px;
   background: rgba(255 255 255 / 0.9);
   color: var(--bg2);
@@ -122,11 +121,10 @@ h1{
   font-weight:700;
   font-size:16px;
 }
-.space {
-  background: transparent;
-  border: none;
-  width:20px;
-  height:40px;
+.row {
+  display:flex;
+  gap:5px;
+  justify-content:center;
 }
 
 /* info */
@@ -143,11 +141,16 @@ h1{
   text-shadow:1px 1px 2px #000;
 }
 
-/* input mobilny */
-#mobileInput {
-  opacity: 0;
-  position: absolute;
-  top: -50px;
+/* input for mobile */
+input#letterInput {
+  padding:8px;
+  font-size:16px;
+  border-radius:8px;
+  border:none;
+  text-transform:uppercase;
+  text-align:center;
+  width:60px;
+  outline:none;
 }
 
 /* responsive */
@@ -162,9 +165,9 @@ h1{
 <h1>🎄 Świąteczny Wisielec — choinka z bombkami 🎅</h1>
 
 <div class="container">
-  <div class="tree-card" aria-hidden="false">
-    <div class="tree-wrap" id="treeWrap" aria-hidden="true">
-      <img src="images/choinka.png" alt="Choinka" id="treeImg">
+  <div class="tree-card">
+    <div class="tree-wrap" id="treeWrap">
+      <img src="images/choinka.png" alt="Choinka" id="treeImg" class="choinka">
       <span class="orn" id="orn0">🔴</span>
       <span class="orn" id="orn1">🟢</span>
       <span class="orn" id="orn2">🔵</span>
@@ -173,16 +176,15 @@ h1{
       <span class="orn" id="orn5">⚪</span>
       <span class="orn" id="orn6">🟠</span>
     </div>
-
     <div style="margin-top:10px; font-size:0.95rem;" class="info">
       Błędy: <span id="wrongCount">0</span> / <span id="maxWrong">7</span>
     </div>
   </div>
 
-  <div class="panel" role="application" aria-label="Gra Wisielec">
+  <div class="panel">
     <div class="word" id="word"></div>
-    <div class="info" id="message">Kliknij poniżej, by wpisać literę 👇</div>
-    <input id="mobileInput" type="text" maxlength="1" autocomplete="off" autocapitalize="characters" />
+    <div class="info" id="message">Wpisz literę z klawiatury lub użyj pola poniżej.</div>
+    <input type="text" id="letterInput" maxlength="1" autofocus />
     <div class="result" id="result"></div>
   </div>
 </div>
@@ -190,7 +192,6 @@ h1{
 <script>
 const ANSWER = "GORĄCA CZEKOLADA";
 const MAX_WRONG = 7;
-const ORN_COUNT = 7;
 const ORN_POSITIONS = [
   {left: 56, top: 18},
   {left: 34, top: 26},
@@ -209,7 +210,9 @@ const messageEl = document.getElementById('message');
 const wrongCountEl = document.getElementById('wrongCount');
 const resultEl = document.getElementById('result');
 const treeWrap = document.getElementById('treeWrap');
-const input = document.getElementById('mobileInput');
+const inputEl = document.getElementById('letterInput');
+
+document.getElementById('maxWrong').textContent = MAX_WRONG;
 
 function positionOrnaments(){
   ORN_POSITIONS.forEach((pos, idx) => {
@@ -224,20 +227,18 @@ function positionOrnaments(){
 
 function renderWord(){
   wordBox.innerHTML = '';
-  const words = ANSWER.split(' ');
-  for(let i=0;i<words.length;i++){
-    for(const ch of words[i]){
+  const lines = ["GORĄCA", "CZEKOLADA"];
+  lines.forEach(word => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    for(const ch of word){
       const div = document.createElement('div');
       div.className = 'letter';
       div.textContent = revealed.includes(ch) ? ch : '';
-      wordBox.appendChild(div);
+      row.appendChild(div);
     }
-    if(i < words.length - 1){
-      const sp = document.createElement('div');
-      sp.className = 'space';
-      wordBox.appendChild(sp);
-    }
-  }
+    wordBox.appendChild(row);
+  });
 }
 
 const VALID_LETTERS = Array.from("AĄBCĆDEĘFGHIJKLŁMNOÓPQRSTUUVWXYZŹŻ");
@@ -251,17 +252,26 @@ function handleGuess(letter){
   if(ANSWER.includes(letter)){
     revealed.push(letter);
     renderWord();
-    messageEl.textContent = `Dobra! Litera "${letter}" jest w haśle.`;
+    messageEl.textContent = `✅ Litera "${letter}" jest w haśle!`;
     checkWin();
   } else {
     wrong++;
     wrongCountEl.textContent = wrong;
-    messageEl.textContent = `Niestety — litera "${letter}" nie występuje.`;
+    messageEl.textContent = `❌ Litera "${letter}" nie występuje.`;
     dropOrnament(wrong - 1);
     checkLose();
   }
-  input.value = '';
+  inputEl.value = '';
 }
+
+inputEl.addEventListener('input', (e)=>{
+  const val = e.target.value.toUpperCase();
+  if(VALID_LETTERS.includes(val)){
+    handleGuess(val);
+  } else {
+    e.target.value = '';
+  }
+});
 
 function dropOrnament(idx){
   const el = document.getElementById(`orn${idx}`);
@@ -288,13 +298,12 @@ function checkLose(){
     finished = true;
     resultEl.textContent = `💥 Przegrałeś — hasło: ${ANSWER}`;
     messageEl.textContent = 'Bombki spadły...';
-    for(let i=0;i<ORN_COUNT;i++){
-      const el = document.getElementById(`orn${i}`);
-      if(el && !el.classList.contains('fall')){
+    document.querySelectorAll('.orn').forEach((el)=>{
+      if(!el.classList.contains('fall')){
         el.classList.add('fall');
         setTimeout(()=> el.classList.add('hidden'), 950);
       }
-    }
+    });
   }
 }
 
@@ -304,28 +313,13 @@ function startGame(){
   finished = false;
   wrongCountEl.textContent = 0;
   resultEl.textContent = '';
-  messageEl.textContent = 'Kliknij poniżej, by wpisać literę 👇';
+  messageEl.textContent = 'Wpisz literę z klawiatury lub użyj pola poniżej.';
   positionOrnaments();
   renderWord();
+  inputEl.focus();
 }
 
 window.addEventListener('resize', positionOrnaments);
-
-window.addEventListener('keydown', (e)=>{
-  if(finished) return;
-  let key = e.key || '';
-  if(key.length !== 1) return;
-  key = key.toUpperCase();
-  if(!VALID_LETTERS.includes(key)) return;
-  handleGuess(key);
-});
-
-input.addEventListener('input', (e)=>{
-  let val = e.target.value.toUpperCase();
-  if(val && VALID_LETTERS.includes(val)){
-    handleGuess(val);
-  }
-});
 
 const img = document.getElementById('treeImg');
 if(img.complete){
@@ -337,11 +331,6 @@ if(img.complete){
     startGame();
   });
 }
-
-// pozwól kliknąć panel, aby aktywować klawiaturę
-document.querySelector('.panel').addEventListener('click', ()=>{
-  input.focus();
-});
 </script>
 </body>
 </html>
