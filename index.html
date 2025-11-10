@@ -67,7 +67,7 @@ h1{
   width:100%;
   height:auto;
   border-radius:8px;
-  background: transparent; /* bez białego tła */
+  background: transparent;
   filter: drop-shadow(0 0 12px rgba(0,0,0,0.4));
 }
 
@@ -104,15 +104,15 @@ h1{
 /* słowo */
 .word {
   display:flex;
-  gap:6px;
+  gap:5px;
   flex-wrap:wrap;
   justify-content:center;
   min-height:60px;
-  max-width: 380px;
+  max-width: 340px;
 }
 .letter {
-  width:36px;
-  height:46px;
+  width:30px;
+  height:40px;
   border-radius:6px;
   background: rgba(255 255 255 / 0.9);
   color: var(--bg2);
@@ -120,13 +120,13 @@ h1{
   align-items:center;
   justify-content:center;
   font-weight:700;
-  font-size:18px;
+  font-size:16px;
 }
 .space {
   background: transparent;
   border: none;
-  width:24px;
-  height:46px;
+  width:20px;
+  height:40px;
 }
 
 /* info */
@@ -141,6 +141,13 @@ h1{
   font-weight:700;
   color: var(--accent);
   text-shadow:1px 1px 2px #000;
+}
+
+/* input mobilny */
+#mobileInput {
+  opacity: 0;
+  position: absolute;
+  top: -50px;
 }
 
 /* responsive */
@@ -174,7 +181,8 @@ h1{
 
   <div class="panel" role="application" aria-label="Gra Wisielec">
     <div class="word" id="word"></div>
-    <div class="info" id="message">Wpisz literę z klawiatury (polskie znaki obsługiwane).</div>
+    <div class="info" id="message">Kliknij poniżej, by wpisać literę 👇</div>
+    <input id="mobileInput" type="text" maxlength="1" autocomplete="off" autocapitalize="characters" />
     <div class="result" id="result"></div>
   </div>
 </div>
@@ -201,6 +209,7 @@ const messageEl = document.getElementById('message');
 const wrongCountEl = document.getElementById('wrongCount');
 const resultEl = document.getElementById('result');
 const treeWrap = document.getElementById('treeWrap');
+const input = document.getElementById('mobileInput');
 
 function positionOrnaments(){
   ORN_POSITIONS.forEach((pos, idx) => {
@@ -215,28 +224,23 @@ function positionOrnaments(){
 
 function renderWord(){
   wordBox.innerHTML = '';
-  for(const ch of ANSWER){
-    const div = document.createElement('div');
-    if(ch === ' '){
-      div.className = 'space';
-      div.innerHTML = '&nbsp;';
-    } else {
+  const words = ANSWER.split(' ');
+  for(let i=0;i<words.length;i++){
+    for(const ch of words[i]){
+      const div = document.createElement('div');
       div.className = 'letter';
       div.textContent = revealed.includes(ch) ? ch : '';
+      wordBox.appendChild(div);
     }
-    wordBox.appendChild(div);
+    if(i < words.length - 1){
+      const sp = document.createElement('div');
+      sp.className = 'space';
+      wordBox.appendChild(sp);
+    }
   }
 }
 
 const VALID_LETTERS = Array.from("AĄBCĆDEĘFGHIJKLŁMNOÓPQRSTUUVWXYZŹŻ");
-window.addEventListener('keydown', (e) => {
-  if(finished) return;
-  let key = e.key || '';
-  if(key.length !== 1) return;
-  key = key.toUpperCase();
-  if(!VALID_LETTERS.includes(key)) return;
-  handleGuess(key);
-});
 
 function handleGuess(letter){
   if(finished) return;
@@ -256,6 +260,7 @@ function handleGuess(letter){
     dropOrnament(wrong - 1);
     checkLose();
   }
+  input.value = '';
 }
 
 function dropOrnament(idx){
@@ -299,12 +304,28 @@ function startGame(){
   finished = false;
   wrongCountEl.textContent = 0;
   resultEl.textContent = '';
-  messageEl.textContent = 'Wpisz literę z klawiatury (polskie znaki obsługiwane).';
+  messageEl.textContent = 'Kliknij poniżej, by wpisać literę 👇';
   positionOrnaments();
   renderWord();
 }
 
 window.addEventListener('resize', positionOrnaments);
+
+window.addEventListener('keydown', (e)=>{
+  if(finished) return;
+  let key = e.key || '';
+  if(key.length !== 1) return;
+  key = key.toUpperCase();
+  if(!VALID_LETTERS.includes(key)) return;
+  handleGuess(key);
+});
+
+input.addEventListener('input', (e)=>{
+  let val = e.target.value.toUpperCase();
+  if(val && VALID_LETTERS.includes(val)){
+    handleGuess(val);
+  }
+});
 
 const img = document.getElementById('treeImg');
 if(img.complete){
@@ -316,6 +337,11 @@ if(img.complete){
     startGame();
   });
 }
+
+// pozwól kliknąć panel, aby aktywować klawiaturę
+document.querySelector('.panel').addEventListener('click', ()=>{
+  input.focus();
+});
 </script>
 </body>
 </html>
