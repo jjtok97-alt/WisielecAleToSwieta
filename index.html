@@ -67,7 +67,8 @@ h1{
   width:100%;
   height:auto;
   border-radius:8px;
-  background:transparent; /* brak białego tła */
+  background: transparent; /* bez białego tła */
+  filter: drop-shadow(0 0 12px rgba(0,0,0,0.4));
 }
 
 /* ornaments */
@@ -78,16 +79,12 @@ h1{
   transition: transform 0.45s ease, opacity 0.45s ease;
   transform-origin:center;
 }
-
-/* falling animation */
 @keyframes fall {
   0%{ transform: translateY(0) rotate(0deg); opacity:1; }
   80%{ opacity:1; }
   100%{ transform: translateY(260px) rotate(360deg); opacity:0; }
 }
 .fall { animation: fall 900ms ease-in forwards; }
-
-/* hidden after fall */
 .hidden { opacity:0; transform:scale(0.3); }
 
 /* right panel */
@@ -104,17 +101,18 @@ h1{
   align-items:center;
 }
 
-/* word display */
+/* słowo */
 .word {
-  display:grid;
-  grid-template-columns: repeat(7, 1fr); /* 7 liter na rząd – 2 rzędy dla "GORĄCA CZEKOLADA" */
-  gap:8px;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
   justify-content:center;
-  min-height:120px;
+  min-height:60px;
+  max-width: 380px;
 }
 .letter {
-  width:44px;
-  height:52px;
+  width:36px;
+  height:46px;
   border-radius:6px;
   background: rgba(255 255 255 / 0.9);
   color: var(--bg2);
@@ -122,33 +120,22 @@ h1{
   align-items:center;
   justify-content:center;
   font-weight:700;
-  font-size:20px;
+  font-size:18px;
 }
 .space {
   background: transparent;
   border: none;
-  width:44px;
-  height:52px;
+  width:24px;
+  height:46px;
 }
 
-/* info, controls */
+/* info */
 .info {
   font-size:1rem;
   text-shadow:1px 1px 2px #000;
   text-align:center;
   min-height:22px;
 }
-button.action {
-  padding:10px 16px;
-  border-radius:8px;
-  border:none;
-  cursor:pointer;
-  background:#d32f2f;
-  color:white;
-  font-weight:700;
-}
-button.action:hover{ background:#b71c1c; }
-
 .result {
   font-size:1rem;
   font-weight:700;
@@ -168,9 +155,9 @@ button.action:hover{ background:#b71c1c; }
 <h1>🎄 Świąteczny Wisielec — choinka z bombkami 🎅</h1>
 
 <div class="container">
-  <div class="tree-card">
-    <div class="tree-wrap" id="treeWrap">
-      <img src="images/choinka.png" alt="Choinka" id="treeImg" class="choinka">
+  <div class="tree-card" aria-hidden="false">
+    <div class="tree-wrap" id="treeWrap" aria-hidden="true">
+      <img src="images/choinka.png" alt="Choinka" id="treeImg">
       <span class="orn" id="orn0">🔴</span>
       <span class="orn" id="orn1">🟢</span>
       <span class="orn" id="orn2">🔵</span>
@@ -179,15 +166,15 @@ button.action:hover{ background:#b71c1c; }
       <span class="orn" id="orn5">⚪</span>
       <span class="orn" id="orn6">🟠</span>
     </div>
+
     <div style="margin-top:10px; font-size:0.95rem;" class="info">
       Błędy: <span id="wrongCount">0</span> / <span id="maxWrong">7</span>
     </div>
   </div>
 
-  <div class="panel">
+  <div class="panel" role="application" aria-label="Gra Wisielec">
     <div class="word" id="word"></div>
     <div class="info" id="message">Wpisz literę z klawiatury (polskie znaki obsługiwane).</div>
-    <button class="action" id="revealBtn">👀 Pokaż hasło</button>
     <div class="result" id="result"></div>
   </div>
 </div>
@@ -195,6 +182,7 @@ button.action:hover{ background:#b71c1c; }
 <script>
 const ANSWER = "GORĄCA CZEKOLADA";
 const MAX_WRONG = 7;
+const ORN_COUNT = 7;
 const ORN_POSITIONS = [
   {left: 56, top: 18},
   {left: 34, top: 26},
@@ -204,7 +192,6 @@ const ORN_POSITIONS = [
   {left: 28, top: 60},
   {left: 50, top: 72}
 ];
-
 let revealed = [];
 let wrong = 0;
 let finished = false;
@@ -213,10 +200,7 @@ const wordBox = document.getElementById('word');
 const messageEl = document.getElementById('message');
 const wrongCountEl = document.getElementById('wrongCount');
 const resultEl = document.getElementById('result');
-const revealBtn = document.getElementById('revealBtn');
 const treeWrap = document.getElementById('treeWrap');
-
-document.getElementById('maxWrong').textContent = MAX_WRONG;
 
 function positionOrnaments(){
   ORN_POSITIONS.forEach((pos, idx) => {
@@ -244,11 +228,12 @@ function renderWord(){
   }
 }
 
-const VALID_LETTERS = Array.from("AĄBCĆDEĘFGHIJKLŁMNOÓPQRSTUUVWXYZŹŻ".split(''));
-
+const VALID_LETTERS = Array.from("AĄBCĆDEĘFGHIJKLŁMNOÓPQRSTUUVWXYZŹŻ");
 window.addEventListener('keydown', (e) => {
   if(finished) return;
-  let key = e.key.toUpperCase();
+  let key = e.key || '';
+  if(key.length !== 1) return;
+  key = key.toUpperCase();
   if(!VALID_LETTERS.includes(key)) return;
   handleGuess(key);
 });
@@ -259,7 +244,6 @@ function handleGuess(letter){
     messageEl.textContent = `Litera "${letter}" już odsłonięta.`;
     return;
   }
-
   if(ANSWER.includes(letter)){
     revealed.push(letter);
     renderWord();
@@ -287,7 +271,8 @@ function uniqueLetters(word){
 
 function checkWin(){
   const uniques = uniqueLetters(ANSWER);
-  if(uniques.every(ch => revealed.includes(ch))){
+  const all = uniques.every(ch => revealed.includes(ch));
+  if(all){
     finished = true;
     resultEl.textContent = `🎉 Brawo! Hasło: ${ANSWER}`;
     messageEl.textContent = 'Uratowałeś wszystkie bombki!';
@@ -298,37 +283,37 @@ function checkLose(){
     finished = true;
     resultEl.textContent = `💥 Przegrałeś — hasło: ${ANSWER}`;
     messageEl.textContent = 'Bombki spadły...';
-    document.querySelectorAll('.orn').forEach(o=>{
-      if(!o.classList.contains('fall')){
-        o.classList.add('fall');
-        setTimeout(()=> o.classList.add('hidden'), 950);
+    for(let i=0;i<ORN_COUNT;i++){
+      const el = document.getElementById(`orn${i}`);
+      if(el && !el.classList.contains('fall')){
+        el.classList.add('fall');
+        setTimeout(()=> el.classList.add('hidden'), 950);
       }
-    });
+    }
   }
 }
 
-function revealWord(){
-  if(finished) return;
-  revealed = uniqueLetters(ANSWER);
+function startGame(){
+  revealed = [];
+  wrong = 0;
+  finished = false;
+  wrongCountEl.textContent = 0;
+  resultEl.textContent = '';
+  messageEl.textContent = 'Wpisz literę z klawiatury (polskie znaki obsługiwane).';
+  positionOrnaments();
   renderWord();
-  finished = true;
-  resultEl.textContent = `🔓 Hasło: ${ANSWER}`;
-  messageEl.textContent = 'Hasło ujawnione — rozpocznij nową grę.';
-  document.querySelectorAll('.orn').forEach(o => o.classList.add('hidden'));
 }
-
-revealBtn.addEventListener('click', revealWord);
 
 window.addEventListener('resize', positionOrnaments);
 
 const img = document.getElementById('treeImg');
 if(img.complete){
   positionOrnaments();
-  renderWord();
+  startGame();
 } else {
-  img.addEventListener('load', ()=>{
+  img.addEventListener('load', () => {
     positionOrnaments();
-    renderWord();
+    startGame();
   });
 }
 </script>
