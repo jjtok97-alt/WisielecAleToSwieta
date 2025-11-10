@@ -67,10 +67,10 @@ h1{
   width:100%;
   height:auto;
   border-radius:8px;
-  background: white;
+  background:transparent; /* brak białego tła */
 }
 
-/* ornaments placed absolutely over image using % */
+/* ornaments */
 .orn {
   position:absolute;
   font-size:28px;
@@ -106,11 +106,11 @@ h1{
 
 /* word display */
 .word {
-  display:flex;
+  display:grid;
+  grid-template-columns: repeat(7, 1fr); /* 7 liter na rząd – 2 rzędy dla "GORĄCA CZEKOLADA" */
   gap:8px;
-  flex-wrap:wrap;
   justify-content:center;
-  min-height:60px;
+  min-height:120px;
 }
 .letter {
   width:44px;
@@ -137,10 +137,6 @@ h1{
   text-shadow:1px 1px 2px #000;
   text-align:center;
   min-height:22px;
-}
-.controls {
-  display:flex;
-  gap:8px;
 }
 button.action {
   padding:10px 16px;
@@ -172,50 +168,33 @@ button.action:hover{ background:#b71c1c; }
 <h1>🎄 Świąteczny Wisielec — choinka z bombkami 🎅</h1>
 
 <div class="container">
-  <div class="tree-card" aria-hidden="false">
-    <div class="tree-wrap" id="treeWrap" aria-hidden="true">
-      <!-- obrazek przesłany przez Ciebie -->
-<img src="images/choinka.png" alt="Choinka" class="choinka">
-      <!-- ozdoby (emoji) -->
-      <span class="orn" data-index="0" id="orn0">🔴</span>
-      <span class="orn" data-index="1" id="orn1">🟢</span>
-      <span class="orn" data-index="2" id="orn2">🔵</span>
-      <span class="orn" data-index="3" id="orn3">🟡</span>
-      <span class="orn" data-index="4" id="orn4">🟣</span>
-      <span class="orn" data-index="5" id="orn5">⚪</span>
-      <span class="orn" data-index="6" id="orn6">🟠</span>
+  <div class="tree-card">
+    <div class="tree-wrap" id="treeWrap">
+      <img src="images/choinka.png" alt="Choinka" id="treeImg" class="choinka">
+      <span class="orn" id="orn0">🔴</span>
+      <span class="orn" id="orn1">🟢</span>
+      <span class="orn" id="orn2">🔵</span>
+      <span class="orn" id="orn3">🟡</span>
+      <span class="orn" id="orn4">🟣</span>
+      <span class="orn" id="orn5">⚪</span>
+      <span class="orn" id="orn6">🟠</span>
     </div>
-
     <div style="margin-top:10px; font-size:0.95rem;" class="info">
       Błędy: <span id="wrongCount">0</span> / <span id="maxWrong">7</span>
     </div>
   </div>
 
-  <div class="panel" role="application" aria-label="Gra Wisielec">
+  <div class="panel">
     <div class="word" id="word"></div>
-
     <div class="info" id="message">Wpisz literę z klawiatury (polskie znaki obsługiwane).</div>
-
-    <div class="controls" style="margin-top:8px;">
-      <button class="action" id="newBtn">🔁 Nowa gra</button>
-      <button class="action" id="revealBtn">👀 Pokaż hasło</button>
-    </div>
-
+    <button class="action" id="revealBtn">👀 Pokaż hasło</button>
     <div class="result" id="result"></div>
   </div>
 </div>
 
 <script>
-/* --- konfiguracja --- */
 const ANSWER = "GORĄCA CZEKOLADA";
 const MAX_WRONG = 7;
-const ORN_COUNT = 7; // liczba ozdób (7)
-const ORN_IDS = Array.from({length:ORN_COUNT}, (_,i)=>`orn${i}`);
-document.getElementById('maxWrong').textContent = MAX_WRONG;
-
-/* --- stałe pozycje ozdób w % względem elementu treeWrap.
-   Każdy obiekt: {left:%, top:%} - dostosowane do Twojego obrazka.
-   Jeśli chcesz przesunąć, zmień wartości procentowe. */
 const ORN_POSITIONS = [
   {left: 56, top: 18},
   {left: 34, top: 26},
@@ -226,24 +205,20 @@ const ORN_POSITIONS = [
   {left: 50, top: 72}
 ];
 
-/* --- stan gry --- */
 let revealed = [];
 let wrong = 0;
 let finished = false;
 
-/* --- elementy DOM --- */
 const wordBox = document.getElementById('word');
 const messageEl = document.getElementById('message');
 const wrongCountEl = document.getElementById('wrongCount');
 const resultEl = document.getElementById('result');
-const newBtn = document.getElementById('newBtn');
 const revealBtn = document.getElementById('revealBtn');
 const treeWrap = document.getElementById('treeWrap');
 
-/* --- ustawienia i renderowanie ozdób na obrazku --- */
+document.getElementById('maxWrong').textContent = MAX_WRONG;
+
 function positionOrnaments(){
-  const rect = treeWrap.getBoundingClientRect();
-  // użyj procentów aby były responsywne:
   ORN_POSITIONS.forEach((pos, idx) => {
     const el = document.getElementById(`orn${idx}`);
     if(!el) return;
@@ -254,7 +229,6 @@ function positionOrnaments(){
   });
 }
 
-/* --- render słowa --- */
 function renderWord(){
   wordBox.innerHTML = '';
   for(const ch of ANSWER){
@@ -270,34 +244,23 @@ function renderWord(){
   }
 }
 
-/* --- przyjmowanie zgadnięć z klawiatury fizycznej --- */
-const VALID_LETTERS = Array.from(
-  "AĄBCĆDEĘFGHIJKLŁMNOÓPQRSTUUVWXYZŹŻ".split('')
-);
+const VALID_LETTERS = Array.from("AĄBCĆDEĘFGHIJKLŁMNOÓPQRSTUUVWXYZŹŻ".split(''));
 
 window.addEventListener('keydown', (e) => {
   if(finished) return;
-  let key = e.key || '';
-  if(key.length !== 1) return;
-  key = key.toUpperCase();
-
-  // mapowanie polskich klawiszy, akceptuj także przyciśnięcia z alt/ctrl? pomijamy modyfikatory
+  let key = e.key.toUpperCase();
   if(!VALID_LETTERS.includes(key)) return;
-
   handleGuess(key);
 });
 
-/* --- logika zgadywania --- */
 function handleGuess(letter){
   if(finished) return;
-  // jeśli już odsłonięta litera, nic nie rób
   if(revealed.includes(letter)) {
     messageEl.textContent = `Litera "${letter}" już odsłonięta.`;
     return;
   }
 
   if(ANSWER.includes(letter)){
-    // odsłoń wszystkie wystąpienia
     revealed.push(letter);
     renderWord();
     messageEl.textContent = `Dobra! Litera "${letter}" jest w haśle.`;
@@ -311,25 +274,20 @@ function handleGuess(letter){
   }
 }
 
-/* --- animacja spadania ozdoby (po indeksie) --- */
 function dropOrnament(idx){
-  // spadamy od końca listy, aby efekt był estetyczny (możesz zmienić)
   const el = document.getElementById(`orn${idx}`);
   if(!el) return;
   el.classList.add('fall');
-  // po czasie animacji ukryj
   setTimeout(()=> el.classList.add('hidden'), 950);
 }
 
-/* --- warunki wygranej/przegranej --- */
 function uniqueLetters(word){
   return Array.from(new Set(word.replaceAll(' ','').split('')));
 }
 
 function checkWin(){
   const uniques = uniqueLetters(ANSWER);
-  const all = uniques.every(ch => revealed.includes(ch));
-  if(all){
+  if(uniques.every(ch => revealed.includes(ch))){
     finished = true;
     resultEl.textContent = `🎉 Brawo! Hasło: ${ANSWER}`;
     messageEl.textContent = 'Uratowałeś wszystkie bombki!';
@@ -340,27 +298,13 @@ function checkLose(){
     finished = true;
     resultEl.textContent = `💥 Przegrałeś — hasło: ${ANSWER}`;
     messageEl.textContent = 'Bombki spadły...';
-    // pokaż spadnięcie pozostałych
-    for(let i=0;i<ORN_COUNT;i++){
-      const el = document.getElementById(`orn${i}`);
-      if(el && !el.classList.contains('fall')){
-        el.classList.add('fall');
-        setTimeout(()=> el.classList.add('hidden'), 950);
+    document.querySelectorAll('.orn').forEach(o=>{
+      if(!o.classList.contains('fall')){
+        o.classList.add('fall');
+        setTimeout(()=> o.classList.add('hidden'), 950);
       }
-    }
+    });
   }
-}
-
-/* --- nowa gra i ujawnienie hasła --- */
-function startGame(){
-  revealed = [];
-  wrong = 0;
-  finished = false;
-  wrongCountEl.textContent = 0;
-  resultEl.textContent = '';
-  messageEl.textContent = 'Wpisz literę z klawiatury (polskie znaki obsługiwane).';
-  positionOrnaments();
-  renderWord();
 }
 
 function revealWord(){
@@ -370,35 +314,23 @@ function revealWord(){
   finished = true;
   resultEl.textContent = `🔓 Hasło: ${ANSWER}`;
   messageEl.textContent = 'Hasło ujawnione — rozpocznij nową grę.';
-  // usuń ozdoby wizualnie
-  document.querySelectorAll('.orn').forEach(o => {
-    o.classList.add('hidden');
-  });
+  document.querySelectorAll('.orn').forEach(o => o.classList.add('hidden'));
 }
 
-/* --- Obsługa zmiany rozmiaru by pozycje pozostawały poprawne --- */
-window.addEventListener('resize', () => {
-  positionOrnaments();
-});
-
-/* --- inicjalizacja --- */
-newBtn.addEventListener('click', startGame);
 revealBtn.addEventListener('click', revealWord);
 
-// ustaw początkowe pozycje po załadowaniu obrazka (żeby mieć pewność rozmiaru)
+window.addEventListener('resize', positionOrnaments);
+
 const img = document.getElementById('treeImg');
 if(img.complete){
   positionOrnaments();
-  startGame();
+  renderWord();
 } else {
-  img.addEventListener('load', () => {
+  img.addEventListener('load', ()=>{
     positionOrnaments();
-    startGame();
+    renderWord();
   });
 }
 </script>
 </body>
 </html>
-
-
-
