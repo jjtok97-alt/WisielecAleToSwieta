@@ -175,9 +175,10 @@ input#letterInput {
       <span class="orn" id="orn4">🟣</span>
       <span class="orn" id="orn5">⚪</span>
       <span class="orn" id="orn6">🟠</span>
+      <span class="orn" id="orn7">⚫</span>
     </div>
     <div style="margin-top:10px; font-size:0.95rem;" class="info">
-      Błędy: <span id="wrongCount">0</span> / <span id="maxWrong">7</span>
+      Błędy: <span id="wrongCount">0</span> / <span id="maxWrong">8</span>
     </div>
   </div>
 
@@ -191,15 +192,16 @@ input#letterInput {
 
 <script>
 const ANSWER = "GORĄCA CZEKOLADA";
-const MAX_WRONG = 7;
+const MAX_WRONG = 8;
 const ORN_POSITIONS = [
-  {left: 43, top: 22},
-  {left: 60, top: 40},
-  {left: 22, top: 40},
-  {left: 69, top: 53},
-  {left: 16, top: 58},
-  {left: 74, top: 70},
-  {left: 12, top: 74}
+  {left: 48, top: 18}, // 🔴 góra
+  {left: 34, top: 30}, // 🟢 lewo wyżej
+  {left: 62, top: 30}, // 🔵 prawo wyżej
+  {left: 25, top: 45}, // 🟡 środek lewo
+  {left: 70, top: 45}, // 🟣 środek prawo
+  {left: 38, top: 60}, // ⚪ dół lewo
+  {left: 58, top: 60}, // 🟠 dół prawo
+  {left: 48, top: 78}  // ⚫ czarna — na samym dole
 ];
 let revealed = [];
 let wrong = 0;
@@ -334,10 +336,3 @@ if(img.complete){
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
