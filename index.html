@@ -194,14 +194,14 @@ input#letterInput {
 const ANSWER = "GORĄCA CZEKOLADA";
 const MAX_WRONG = 8;
 const ORN_POSITIONS = [
-  {left: 48, top: 18}, // 🔴 góra
-  {left: 34, top: 30}, // 🟢 lewo wyżej
-  {left: 62, top: 30}, // 🔵 prawo wyżej
+  {left: 59, top: 29}, // 🔴 góra
+  {left: 30, top: 29, // 🟢 lewo wyżej
+  {left: 68, top: 45}, // 🔵 prawo wyżej
   {left: 25, top: 45}, // 🟡 środek lewo
-  {left: 70, top: 45}, // 🟣 środek prawo
+  {left: 70, top: 60}, // 🟣 środek prawo
   {left: 38, top: 60}, // ⚪ dół lewo
-  {left: 58, top: 60}, // 🟠 dół prawo
-  {left: 48, top: 78}  // ⚫ czarna — na samym dole
+  {left: 58, top: 75}, // 🟠 dół prawo
+  {left: 20, top: 75}  // ⚫ czarna — na samym dole
 ];
 let revealed = [];
 let wrong = 0;
@@ -336,3 +336,4 @@ if(img.complete){
 </script>
 </body>
 </html>
+
