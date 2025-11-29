@@ -291,14 +291,14 @@ function checkWin(){
   const all = uniques.every(ch => revealed.includes(ch));
   if(all){
     finished = true;
-    resultEl.textContent = `🎉 Brawo! Wejdź do Narnii a znajdziesz prezent!! `;
+    resultEl.textContent = `🎉 Brawo! Zajrzyj do Narnii a znajdziesz prezent!! `;
     messageEl.textContent = 'Uratowałeś bombki!';
   }
 }
 function checkLose(){
   if(wrong >= MAX_WRONG){
     finished = true;
-    resultEl.textContent = `💥 Przegrałeś — hasło: ${ANSWER}`;
+    resultEl.textContent = `💥 Przegrałeś — Odśwież strone i spróbuj ponownie!`;
     messageEl.textContent = 'Bombki spadły...';
     document.querySelectorAll('.orn').forEach((el)=>{
       if(!el.classList.contains('fall')){
@@ -336,6 +336,7 @@ if(img.complete){
 </script>
 </body>
 </html>
+
 
 
 
